@@ -81,12 +81,21 @@ python3 build_plist.py
 
 ## Status
 
-Early release. Both scripts compile, the package builds, and `build.sh` fails
-the build if either script stops compiling. What has *not* been confirmed is
-the part only a real machine with real entries can answer: whether the
-accessibility tree of the Passwords app looks the way these scripts assume.
-The element lookups are written defensively — by role rather than by a
-hardcoded path — but they are assumptions until someone runs them.
+Early release. Run against macOS 26.6.1, where the following are confirmed
+working: both scripts compile, the package builds, the workflow launches
+Passwords and walks its accessibility tree, `pwdump` produces a correctly
+redacted and readable dump, and every failure path exits within about 30
+seconds with a message naming the actual problem.
+
+What is **not** yet confirmed is the successful path: selecting a result and
+clicking the right *Copy…* item. Verifying it requires an unlocked Passwords
+app with real entries. The element lookups are written defensively — by role
+rather than by a hardcoded path — but that specific step remains an assumption.
+
+Note that Passwords must be **unlocked** before the workflow can find anything.
+While it is locked the app reports zero windows and authentication is handled
+by a separate system process that the workflow cannot drive, so `pass` will
+wait, then tell you to unlock and try again.
 
 Please open an issue with your `pwdump` output and macOS version if something
 does not resolve.

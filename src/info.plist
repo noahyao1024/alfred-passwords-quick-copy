@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string>com.github.your-github-username.passwordsquickcopy</string>
+	<string>com.github.noahyao1024.passwordsquickcopy</string>
 	<key>category</key>
 	<string>Productivity</string>
 	<key>connections</key>
@@ -131,7 +131,7 @@
 		</array>
 	</dict>
 	<key>createdby</key>
-	<string>Your Name</string>
+	<string>Noah Yao</string>
 	<key>description</key>
 	<string>Search the Apple Passwords app and copy a password, username, verification code or website to the clipboard.</string>
 	<key>disabled</key>
@@ -455,6 +455,6 @@ Alternatively, save the Passwords app’s accessibility tree to your Desktop via
 	<key>version</key>
 	<string>1.0.0</string>
 	<key>webaddress</key>
-	<string>https://github.com/YOUR-GITHUB-USERNAME/alfred-passwords-quick-copy</string>
+	<string>https://github.com/noahyao1024/alfred-passwords-quick-copy</string>
 </dict>
 </plist>

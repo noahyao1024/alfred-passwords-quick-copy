@@ -2,8 +2,8 @@
 
 Post this in **Share your Workflows**: https://www.alfredforum.com/forum/3-share-your-workflows/
 
-Replace `YOUR-GITHUB-USERNAME` throughout, add screenshots, and delete this
-header before posting.
+Add a screenshot and delete this header before posting. The download link
+below is live.
 
 ---
 
@@ -19,7 +19,7 @@ through the Accessibility API instead: it activates Passwords, searches, selects
 the first match and clicks the appropriate *Copy…* item from the row's context
 menu, then hides the app again.
 
-**Download:** https://github.com/YOUR-GITHUB-USERNAME/alfred-passwords-quick-copy/releases/latest
+**Download:** https://github.com/noahyao1024/alfred-passwords-quick-copy/releases/latest
 
 ## Setup
 

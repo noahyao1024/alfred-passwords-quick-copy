@@ -7,6 +7,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 GH_USER = os.environ.get("GH_USER", "YOUR-GITHUB-USERNAME")
 AUTHOR = os.environ.get("AUTHOR", "Your Name")
 REPO = os.environ.get("REPO", "alfred-passwords-quick-copy")
+# Must track the release tag: Alfred shows this and uses it for update checks,
+# so a bundle claiming 1.0.0 inside a v0.1.0 release is a real mismatch.
+VERSION = os.environ.get("VERSION", "0.1.0")
 SRC = os.path.join(HERE, "src")
 
 KW      = "A1B2C3D4-0000-0000-0000-000000000001"
@@ -142,7 +145,7 @@ wf = {
     "userconfigurationconfig": userconfig,
     "variables": {"keyword": "pass", "CLEAR_CLIPBOARD_AFTER": "45"},
     "variablesdontexport": [],
-    "version": "1.0.0",
+    "version": VERSION,
     "webaddress": f"https://github.com/{GH_USER}/{REPO}",
 }
 

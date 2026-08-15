@@ -1,0 +1,9 @@
+.DS_Store
+__pycache__/
+*.pyc
+
+# The originals this repo was unpacked from. release.sh runs `git add -A`,
+# which would otherwise commit a tarball of the repo into the repo, and a
+# stale top-level workflow that users could download instead of dist/.
+/alfred-passwords-quick-copy-repo.tar.gz
+/Passwords Quick Copy.alfredworkflow

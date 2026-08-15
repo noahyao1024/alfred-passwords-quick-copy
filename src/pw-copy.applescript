@@ -6,125 +6,134 @@
 -- Apple exposes no API for the Passwords app (the data lives in the
 -- data-protection keychain, which has no command-line access), so this
 -- drives the app's UI through the Accessibility API instead.
+--
+-- The copy itself goes through the Edit menu, not the row's context menu.
+-- On macOS 26 `perform action "AXShowMenu"` on a result row produces no
+-- accessible menu at all -- nothing on the row, the outline, the process, or
+-- in any new window -- so the context-menu route cannot be driven. The same
+-- commands live in the menu bar under Edit, and those are exposed normally:
+--
+--   Copy User Name  ⇧⌘C      Copy Password   ⌥⌘C
+--   Copy Code       ⌃⌘C      Copy Website    ⇧⌥⌘C
+--
+-- Menu item names are localised, so each field also carries its keyboard
+-- shortcut as a fallback; the shortcuts are the same on every language.
 
 on run argv
 	if (count of argv) < 2 then error "Usage: pw-copy <field> <query>"
 	set fieldKey to item 1 of argv
 	set searchQuery to item 2 of argv
 
-	-- The context-menu item we are looking for, per field. Several spellings
-	-- are accepted per field: the exact wording has shifted between macOS
-	-- releases, and matching only one of them is what breaks first.
+	-- Menu item names to look for, and the shortcut to fall back on.
 	if fieldKey is "username" then
-		set menuKeywords to {"User Name", "Username", "User name"}
+		set menuNames to {"Copy User Name", "Copy Username"}
+		set shortMods to {command down, shift down}
 	else if fieldKey is "code" then
-		set menuKeywords to {"Verification Code", "One-Time Code"}
+		set menuNames to {"Copy Code", "Copy Verification Code"}
+		set shortMods to {command down, control down}
 	else if fieldKey is "website" then
-		set menuKeywords to {"Website", "Web Site"}
+		set menuNames to {"Copy Website", "Copy Web Site"}
+		set shortMods to {command down, shift down, option down}
 	else
-		set menuKeywords to {"Password"}
+		set menuNames to {"Copy Password"}
+		set shortMods to {command down, option down}
 	end if
 
-	-- Was the app already running? If not, we quit it again afterwards.
 	tell application "System Events"
 		set wasRunning to (exists process "Passwords")
 	end tell
 
 	set copiedLabel to missing value
-	set availableItems to ""
 
 	do shell script "open -a Passwords"
 
 	try
 		tell application "System Events"
-		if not (exists process "Passwords") then
-			delay 0.5
-			if not (exists process "Passwords") then error "Passwords app did not launch."
-		end if
+			tell process "Passwords"
+				my waitForWindow()
 
-		tell process "Passwords"
-			-- Wait for a usable window. Allow a long timeout: the user may
-			-- have to authenticate with Touch ID or their login password
-			-- first, during which the process has no windows at all.
-			my waitForWindow()
+				-- The search field only exists once unlocked, so finding it is
+				-- also how we know authentication finished. Timed against the
+				-- clock: each pass is hundreds of Apple Events and costs far
+				-- more than the delay beside it.
+				-- The lookup is wrapped because `window 1` is resolved here, in
+				-- the caller, outside findSearchField's own try blocks. While
+				-- the app is locked it destroys and recreates its window, so
+				-- that resolution intermittently throws -1719. Treating it as
+				-- "not ready yet" is what lets this keep waiting for the user
+				-- to authenticate instead of giving up a second or two in.
+				set searchField to missing value
+				set startTime to current date
+				repeat
+					try
+						set searchField to my findSearchField(window 1)
+					on error
+						set searchField to missing value
+					end try
+					if searchField is not missing value then exit repeat
+					delay 0.2
+					if ((current date) - startTime) > 60 then
+						error "Timed out waiting for Passwords to unlock. Unlock it with Touch ID or your password, then try again."
+					end if
+				end repeat
 
-			-- Wait for the search field, which only exists once unlocked.
-			-- Timed against the clock, not by adding up the delays: each
-			-- findSearchField pass is a few hundred Apple Events and costs
-			-- far more than the 0.2s delay below, so counting delays alone
-			-- turned a "30 second" timeout into two and a half minutes.
-			set searchField to missing value
-			set startTime to current date
-			repeat
-				set searchField to my findSearchField(window 1)
-				if searchField is not missing value then exit repeat
-				delay 0.2
-				if ((current date) - startTime) > 30 then
-					error "Timed out waiting for Passwords to unlock. Unlock it with Touch ID or your password, then try again."
-				end if
-			end repeat
-
-			-- Type the query. Setting the value directly does not always
-			-- trigger filtering, so focus the field and type into it.
-			-- keystroke goes to the frontmost app, so make sure that is us.
-			set frontmost to true
-			set focused of searchField to true
-			try
-				set value of searchField to ""
-			end try
-			delay 0.1
-			keystroke searchQuery
-			delay 0.6
-
-			-- Find the results list and the first selectable row.
-			set theList to my findList(window 1, 0)
-			if theList is missing value then error "Could not find the results list. Run `pwdump` and send me the output."
-
-			set theRows to rows of theList
-			if (count of theRows) is 0 then error "No entry found for " & searchQuery & "."
-
-			-- Try the first few rows: some may be section headers.
-			repeat with i from 1 to (count of theRows)
-				if i > 4 then exit repeat
-				set thisRow to item i of theRows
+				-- keystroke goes to the frontmost app, so make sure that is us.
+				set frontmost to true
+				set focused of searchField to true
 				try
-					set selected of thisRow to true
-					delay 0.25
-					perform action "AXShowMenu" of thisRow
-					delay 0.4
+					set value of searchField to ""
+				end try
+				delay 0.1
+				keystroke searchQuery
+				delay 0.8
 
-					set foundItem to missing value
-					repeat with mi in (menu items of menu 1 of thisRow)
-						set n to ""
-						try
-							set n to name of mi
-						end try
-						if n is not "" then
-							set availableItems to availableItems & n & ", "
-							if foundItem is missing value and n starts with "Copy" then
-								repeat with mk in menuKeywords
-									if n contains (mk as string) then
-										set foundItem to contents of mi
-										exit repeat
-									end if
-								end repeat
+				set theList to missing value
+				try
+					set theList to my findList(window 1, 0)
+				end try
+				if theList is missing value then error "Could not find the results list. Run `pwdump` and send me the output."
+
+				set theRows to rows of theList
+				if (count of theRows) is 0 then error "No entry found for " & searchQuery & "."
+
+				-- The outline's top-level rows are section headers, not
+				-- entries: an unfiltered window reports 5 rows for over a
+				-- thousand items. Entries sit at a disclosure level below
+				-- that, so prefer those, and fall back to trying rows in
+				-- order. A row is only the right one if it makes the Copy
+				-- command light up, which is what `enabled` is checked for.
+				set ordered to my entryRowsFirst(theRows)
+
+				set copyItem to missing value
+				repeat with r in ordered
+					try
+						set selected of r to true
+						delay 0.3
+						set copyItem to my findCopyItem(menuNames)
+						if copyItem is not missing value then
+							if enabled of copyItem then
+								set copiedLabel to my rowLabel(r)
+								exit repeat
 							end if
 						end if
-					end repeat
+						set copyItem to missing value
+					end try
+				end repeat
 
-					if foundItem is not missing value then
-						click foundItem
-						delay 0.2
-						set copiedLabel to my rowLabel(thisRow)
-						exit repeat
-					else
-						key code 53 -- escape, dismiss the menu
-						delay 0.2
-					end if
-				end try
-			end repeat
+				if copiedLabel is missing value then
+					error "No entry found for " & searchQuery & "."
+				end if
+
+				-- Click the menu item, or use the shortcut if the names did
+				-- not match, which is what happens on a localised system.
+				if copyItem is not missing value then
+					click copyItem
+				else
+					keystroke "c" using shortMods
+				end if
+				delay 0.3
+			end tell
 		end tell
-	end tell
 	on error errMsg
 		-- Never leave Passwords sitting in the foreground holding the user's
 		-- focus because a lookup failed.
@@ -132,19 +141,56 @@ on run argv
 		error errMsg
 	end try
 
-	-- Put the app away again; hiding restores focus to whatever you were using.
 	my putAway(wasRunning)
-
-	if copiedLabel is missing value then
-		if availableItems is "" then
-			error "No entry found for " & searchQuery & "."
-		else
-			error "No \"Copy " & (item 1 of menuKeywords) & "\" item for that entry. Menu offered: " & availableItems
-		end if
-	end if
 
 	return my fieldLabel(fieldKey) & " copied — " & copiedLabel
 end run
+
+
+-- Entry rows before section headers, otherwise original order.
+on entryRowsFirst(theRows)
+	set deep to {}
+	set shallow to {}
+	tell application "System Events"
+		repeat with r in theRows
+			set lvl to 0
+			try
+				set lvl to value of attribute "AXDisclosureLevel" of r
+			end try
+			if lvl > 0 then
+				set end of deep to contents of r
+			else
+				set end of shallow to contents of r
+			end if
+		end repeat
+	end tell
+	set out to {}
+	repeat with r in deep
+		if (count of out) ≥ 8 then exit repeat
+		set end of out to r
+	end repeat
+	repeat with r in shallow
+		if (count of out) ≥ 8 then exit repeat
+		set end of out to r
+	end repeat
+	return out
+end entryRowsFirst
+
+
+-- The Copy command in the Edit menu, by any of its known names.
+on findCopyItem(menuNames)
+	tell application "System Events"
+		tell process "Passwords"
+			repeat with nm in menuNames
+				try
+					set mi to menu item (nm as string) of menu 1 of menu bar item "Edit" of menu bar 1
+					if exists mi then return contents of mi
+				end try
+			end repeat
+		end tell
+	end tell
+	return missing value
+end findCopyItem
 
 
 -- Wait for a Passwords window that is actually usable.

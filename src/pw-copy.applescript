@@ -87,37 +87,41 @@ on run argv
 				keystroke searchQuery
 				delay 0.8
 
-				set theList to missing value
-				try
-					set theList to my findList(window 1, 0)
-				end try
-				if theList is missing value then error "Could not find the results list. Run `pwdump` and send me the output."
-
-				set theRows to rows of theList
-				if (count of theRows) is 0 then error "No entry found for " & searchQuery & "."
-
-				-- The outline's top-level rows are section headers, not
-				-- entries: an unfiltered window reports 5 rows for over a
-				-- thousand items. Entries sit at a disclosure level below
-				-- that, so prefer those, and fall back to trying rows in
-				-- order. A row is only the right one if it makes the Copy
-				-- command light up, which is what `enabled` is checked for.
-				set ordered to my entryRowsFirst(theRows)
+				-- There is more than one outline in this window: the sidebar
+				-- (All, Passkeys, Codes, Wi-Fi, ...) is one, the results are
+				-- another. Taking simply the first one found means selecting
+				-- sidebar categories, which is why nothing ever copied -- the
+				-- row count stayed at 5 no matter what was searched for.
+				--
+				-- Rather than guess which outline is which, try them all. A
+				-- row is the right one only if selecting it makes the Copy
+				-- command become enabled, so that check does the identifying.
+				set allLists to my collectLists(window 1)
+				if (count of allLists) is 0 then error "Could not find the results list. Run `pwdump` and send me the output."
 
 				set copyItem to missing value
-				repeat with r in ordered
+				repeat with lst in allLists
+					set theRows to {}
 					try
-						set selected of r to true
-						delay 0.3
-						set copyItem to my findCopyItem(menuNames)
-						if copyItem is not missing value then
-							if enabled of copyItem then
-								set copiedLabel to my rowLabel(r)
-								exit repeat
-							end if
-						end if
-						set copyItem to missing value
+						set theRows to rows of lst
 					end try
+					repeat with i from 1 to (count of theRows)
+						if i > 10 then exit repeat
+						try
+							set r to item i of theRows
+							set selected of r to true
+							delay 0.3
+							set copyItem to my findCopyItem(menuNames)
+							if copyItem is not missing value then
+								if enabled of copyItem then
+									set copiedLabel to my rowLabel(r)
+									exit repeat
+								end if
+							end if
+							set copyItem to missing value
+						end try
+					end repeat
+					if copiedLabel is not missing value then exit repeat
 				end repeat
 
 				if copiedLabel is missing value then
@@ -145,6 +149,41 @@ on run argv
 
 	return my fieldLabel(fieldKey) & " copied — " & copiedLabel
 end run
+
+
+-- Every outline and table in the window, outermost first. Deliberately not
+-- "the first one that has rows": that is the sidebar.
+on collectLists(root)
+	set acc to {}
+	my gatherLists(root, 0, acc)
+	return acc
+end collectLists
+
+
+on gatherLists(el, depth, acc)
+	if depth > 9 then return
+	tell application "System Events"
+		try
+			repeat with o in (outlines of el)
+				try
+					if (count of rows of o) > 0 then set end of acc to contents of o
+				end try
+			end repeat
+		end try
+		try
+			repeat with t in (tables of el)
+				try
+					if (count of rows of t) > 0 then set end of acc to contents of t
+				end try
+			end repeat
+		end try
+		try
+			repeat with c in (UI elements of el)
+				my gatherLists(c, depth + 1, acc)
+			end repeat
+		end try
+	end tell
+end gatherLists
 
 
 -- Entry rows before section headers, otherwise original order.

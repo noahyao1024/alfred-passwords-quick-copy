@@ -17,6 +17,8 @@ Requires macOS Sequoia or later. No Accessibility permission is needed.
 keyword. Give it a name, or leave it blank to take the name from the link. Your
 clipboard is cleared once the seed is stored.
 
+![Adding an account with the otpadd keyword](images/otpadd.png)
+
 The seed is taken from the clipboard rather than typed after the keyword on
 purpose: Alfred keeps a history of what you type into it, and a TOTP seed does
 not belong in a searchable log.

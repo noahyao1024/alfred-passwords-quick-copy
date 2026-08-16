@@ -1,64 +1,118 @@
 # Passwords Quick Copy
 
-An [Alfred](https://www.alfredapp.com) workflow to copy a password, username,
-verification code or website from the Apple **Passwords** app.
+An [Alfred](https://www.alfredapp.com) workflow for verification codes, plus a
+documented investigation into why copying directly from the Apple **Passwords**
+app is not possible.
 
 ## Setup
 
-Grant Alfred Accessibility permission in System Settings → Privacy & Security
-→ Accessibility. Requires macOS Sequoia or later and an Alfred Powerpack
-licence.
+Store a seed once per account. Seeds live in your login keychain, never in this
+workflow:
+
+```sh
+python3 src/totp.py --store "you@example.com"   # paste the secret, then Ctrl-D
+```
+
+If you have a Passwords app export to hand, the seeds can be pulled out of it
+instead:
+
+```sh
+python3 src/totp.py --import ~/Desktop/Passwords.csv
+rm -P ~/Desktop/Passwords.csv                   # it holds cleartext passwords
+```
+
+Requires macOS Sequoia or later. No Accessibility permission is needed for the
+`otp` keyword.
 
 ## Usage
 
-Search your Apple Passwords entries and copy a field to the clipboard via the
-`pass` keyword.
+Copy a time-based verification code for a stored account via the `otp` keyword.
 
-![Searching passwords](images/search.png)
+* <kbd>↩</kbd> Copy the current code.
 
-* <kbd>↩</kbd> Copy the password.
-* <kbd>⌘</kbd><kbd>↩</kbd> Copy the username.
-* <kbd>⌥</kbd><kbd>↩</kbd> Copy the verification code.
-* <kbd>⌃</kbd><kbd>↩</kbd> Copy the website.
-
-The clipboard is cleared after the delay set in the Workflow’s Configuration,
-but only if it still holds the copied value — compared by SHA-256, so the secret
+The clipboard is cleared after the delay set in the Workflow's Configuration,
+but only if it still holds the copied value — compared by SHA-256, so the code
 is never held in a shell variable.
 
-Alternatively, save the Passwords app’s accessibility tree to your Desktop via
-the `pwdump` keyword. Use it if a field cannot be found.
+Codes are generated locally from the stored seed, so this works offline and
+never opens the Passwords app. The implementation is
+[RFC 6238](https://datatracker.ietf.org/doc/html/rfc6238) and is checked
+against that document's published test vectors on every build, including
+non-default digit counts, periods and hash algorithms.
 
-The dump is redacted by default: element roles, subroles and the names of
-interface controls are kept, but anything that could hold one of your entries —
-static text, text fields, table rows — is replaced with a character count. That
-is enough to debug a selector, and safe to attach to a public issue. Running
-`osascript pw-dump.applescript "query" full` from the workflow folder disables
-redaction; that output contains your account names, so keep it to yourself.
+Other commands:
 
-## Why this uses UI automation
+```sh
+python3 src/totp.py --list             # stored accounts
+python3 src/totp.py --remove <account> # forget one
+python3 src/totp.py --selftest         # RFC 6238 vectors
+```
 
-There is no API for the Passwords app. It is built on the *data protection
-keychain*, not the older file-based keychain that the `security` command-line
-tool talks to. Apple's Developer Technical Support has
-[confirmed](https://developer.apple.com/forums/thread/807782) that there is no
+## Copying from the Passwords app does not work
+
+This is what the workflow was originally for, and it cannot be made to work.
+The `pass` keyword is left in place for anyone who wants to investigate
+further, but it does not copy anything. Recorded here so the next person does
+not spend a day rediscovering it.
+
+Tested on macOS 26.6.1 against an unlocked app with 1,376 entries.
+
+**What works.** Launching the app, waiting through the unlock, typing into the
+search field, and the results filtering — confirmed by the window title
+reporting the match count.
+
+**What does not.** Selecting a result. Every *Copy…* command in the app is
+gated on it having a current item, and nothing makes it register one:
+
+| Approach | Result |
+| --- | --- |
+| `set selected of row to true` | Copy commands stay disabled |
+| Arrow-key navigation from the search field | disabled |
+| `perform action "AXPress"` on the row | disabled |
+| Synthetic click at the row's screen coordinates | disabled |
+| Row context menu via `AXShowMenu` | No menu exists anywhere in the accessibility tree |
+| Menu bar *Edit* → *Copy Password* | Present and readable, never becomes enabled |
+| Shortcuts / App Intents | The app vends none |
+| AppleScript dictionary | The app is not scriptable |
+| `security` CLI | Data protection keychain has no command-line access |
+
+Two things worth knowing if you pick this up:
+
+- The window contains more than one outline. The first one found is the
+  **sidebar** (All, Passkeys, Codes, Wi-Fi…), not the results. Selecting its
+  rows changes the search scope rather than picking an entry, and will silently
+  switch you into a shared group.
+- While locked, the app reports **zero windows** and authentication is handled
+  by a separate process, so a `window 1` reference captured early goes stale and
+  every later lookup fails with `-1719`.
+
+`pwdump` still works and saves a redacted accessibility tree to your Desktop:
+roles, subroles and control names are kept, while anything that could hold one
+of your entries is replaced with a character count, so the output is safe to
+attach to a public issue. Passing `full` as a second argument disables
+redaction; that output contains your account names.
+
+Apple's Developer Technical Support has
+[confirmed](https://developer.apple.com/forums/thread/807782) there is no
 command-line access to the data protection keychain, which is why
-`security find-internet-password` cannot see entries that appear in the
-Passwords app.
+`security find-internet-password` cannot see these entries either. The nearest
+prior art, [alfred-icloud-passwords](https://github.com/leolabs/alfred-icloud-passwords),
+drives the old System Preferences pane rather than the standalone app, and has
+been unmaintained since 2023.
 
-That leaves the Accessibility API as the only route. The workflow activates
-Passwords, types the query into the search field, selects the first result and
-clicks the relevant *Copy…* item from the row's context menu.
+## Security notes
 
-The practical consequences:
+Storing a seed outside the Passwords app means a second copy of your second
+factor exists. If it sits on the same machine as the password it protects, the
+two factors collapse into one device. That is true of any authenticator app on
+your laptop, but it is worth deciding deliberately rather than by accident.
 
-- Alfred needs Accessibility permission, which is a broad grant.
-- The Passwords app briefly takes focus, then hides itself again.
-- Apple can change the app's UI in any macOS release and break this. The scripts
-  search for elements by role rather than hardcoding paths, which helps, but
-  does not make it immune.
-- Context menu item names are localised. On a non-English system the strings
-  matched in `pw-copy.applescript` need adjusting; `pwdump` shows the correct
-  ones.
+Exporting from Passwords writes credentials to disk in cleartext. Prefer
+*Export Selected Passwords to File…* over *Export All*, and remove the file
+afterwards with `rm -P`.
+
+If the account belongs to an employer, check their security policy before
+moving its seed into a personal tool.
 
 ## Development
 
@@ -67,50 +121,15 @@ src/     workflow source (info.plist, scripts, icon)
 dist/    built .alfredworkflow package
 ```
 
-Build the package:
-
 ```sh
-./build.sh
+./build.sh              # compiles the AppleScripts, runs the TOTP selftest, packages
+python3 build_plist.py  # regenerate info.plist only
 ```
 
-Regenerate `info.plist` after editing `build_plist.py`:
-
-```sh
-python3 build_plist.py
-```
-
-## Status
-
-Early release. Run against macOS 26.6.1, where the following are confirmed
-working: both scripts compile, the package builds, the workflow launches
-Passwords and walks its accessibility tree, `pwdump` produces a correctly
-redacted and readable dump, and every failure path exits within about 30
-seconds with a message naming the actual problem.
-
-**The copy action does not currently work on macOS 26.6.1.** This has now been
-tested against an unlocked app with real entries, and the mechanism it is built
-on is not there:
-
-- `perform action "AXShowMenu"` on a result row produces no accessible menu.
-  Not as a child of the row, not on the outline, not on the process, and not as
-  a new window; a recursive search finds no `AXMenu` element at any depth. The
-  workflow clicks *Copy Password* in exactly that menu, so the copy step fails.
-- The results outline reports 5 rows for 1,376 entries, so its top-level rows
-  are section headers rather than entries. The row-selection logic assumes
-  entries.
-
-Apple appears to render this context menu in a way that is not exposed to the
-Accessibility API. Until there is another route to the *Copy…* commands, the
-`pass` keyword will not copy anything. `pwdump` works and is useful for
-investigating this.
-
-Note that Passwords must be **unlocked** before the workflow can find anything.
-While it is locked the app reports zero windows and authentication is handled
-by a separate system process that the workflow cannot drive, so `pass` will
-wait, then tell you to unlock and try again.
-
-Please open an issue with your `pwdump` output and macOS version if something
-does not resolve.
+The build fails if either AppleScript stops compiling or the TOTP vectors stop
+matching. Both checks exist because both classes of bug shipped here once: a
+script that had never been compiled, and a generator that had never been
+verified.
 
 ## Licence
 

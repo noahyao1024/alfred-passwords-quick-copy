@@ -2,63 +2,69 @@
 
 Post this in **Share your Workflows**: https://www.alfredforum.com/forum/3-share-your-workflows/
 
-Add a screenshot and delete this header before posting. The download link
-below is live.
+Add a screenshot and delete this header before posting. The download link below
+is live.
 
 ---
 
-**Title:** Passwords Quick Copy — copy from the Apple Passwords app
+**Title:** Passwords Quick Copy — verification codes, and why the Passwords app can't be scripted
 
 ---
 
-Apple's Passwords app has no scripting support, and because it is built on the
-data protection keychain rather than the file-based one, the `security` CLI
-cannot read its entries either — [Apple DTS confirmed as
-much](https://developer.apple.com/forums/thread/807782). So this workflow goes
-through the Accessibility API instead: it activates Passwords, searches, selects
-the first match and clicks the appropriate *Copy…* item from the row's context
-menu, then hides the app again.
+This started as an attempt to copy passwords straight out of Apple's Passwords
+app. That turned out to be impossible, so the workflow ships the part that does
+work — verification codes — and documents the rest.
 
 **Download:** https://github.com/noahyao1024/alfred-passwords-quick-copy/releases/latest
 
 ## Setup
 
-Grant Alfred Accessibility permission in System Settings → Privacy & Security →
-Accessibility. Requires macOS Sequoia or later.
+Store a seed once per account. Seeds live in your login keychain, not in the
+workflow:
+
+```
+python3 src/totp.py --store "you@example.com"
+```
+
+Requires macOS Sequoia or later. No Accessibility permission needed.
 
 ## Usage
 
-Search your Apple Passwords entries and copy a field to the clipboard via the
-`pass` keyword.
+Copy a time-based verification code for a stored account via the `otp` keyword.
 
-![Searching passwords](images/search.png)
+* <kbd>↩</kbd> Copy the current code.
 
-* <kbd>↩</kbd> Copy the password.
-* <kbd>⌘</kbd><kbd>↩</kbd> Copy the username.
-* <kbd>⌥</kbd><kbd>↩</kbd> Copy the verification code.
-* <kbd>⌃</kbd><kbd>↩</kbd> Copy the website.
+The clipboard clears after the delay set in the Workflow's Configuration, but
+only if it still holds the copied value. Codes are generated locally (RFC 6238),
+so it works offline and never opens the Passwords app. The implementation is
+checked against the RFC's test vectors on every build, including non-default
+digits, periods and algorithms.
 
-The clipboard is cleared after the delay set in the Workflow's Configuration,
-but only if it still holds the copied value — compared by hash, so the secret
-is never held in a shell variable.
+## Why it doesn't read the Passwords app
 
-Alternatively, save the Passwords app's accessibility tree to your Desktop via
-the `pwdump` keyword. The dump is redacted — roles and control names are kept,
-anything that could hold one of your entries is replaced with a character
-count — so it is safe to paste into a bug report.
+Tested on macOS 26.6.1 against an unlocked app with 1,376 entries. Searching and
+filtering can be driven fine. Selecting a result cannot, and every *Copy…*
+command is gated on the app having a current item.
 
-## Notes and caveats
+Nothing registers a selection: accessibility `selected`, arrow keys, `AXPress`,
+or a synthetic click at the row's screen coordinates. The row context menu is
+absent from the accessibility tree entirely. The menu bar *Edit → Copy Password*
+item is readable but never becomes enabled. The app vends no Shortcuts actions
+and is not AppleScript-scriptable.
 
-This is an early release and I would welcome testing, particularly on:
+Two traps if anyone wants to dig further:
 
-- **Non-English systems.** The context menu item names are matched as English
-  strings (`Copy Password`, `Copy User Name`, `Copy Verification Code`,
-  `Copy Website`). On a localised system these need changing — `pwdump` prints
-  the correct ones.
-- **Different macOS versions.** The scripts look elements up by role rather than
-  hardcoding a path through the hierarchy, but Apple can restructure the UI at
-  any point. Built and compile-checked on macOS 26.6.1.
+- The window has more than one outline, and the first one found is the
+  **sidebar**, not the results. Selecting its rows silently changes your search
+  scope, including into shared groups.
+- While locked the app reports **zero windows**, with authentication handled by
+  a separate process, so an early `window 1` reference goes stale and everything
+  afterwards fails with `-1719`.
 
-Everything is plain AppleScript and shell, no binaries, so it is fully
-auditable. Bug reports with `pwdump` output and a macOS version are especially
-useful.
+The `pwdump` keyword saves a redacted accessibility tree to your Desktop if you
+want to look yourself — roles and control names kept, anything that could hold
+one of your entries replaced with a character count, so it's safe to post.
+
+Everything is plain Python and shell, standard library only, no binaries, so
+it's fully auditable. I'd be glad to be proved wrong about the Passwords app —
+if someone finds a route to a selection, the copy side is written and waiting.

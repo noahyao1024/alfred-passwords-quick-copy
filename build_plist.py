@@ -20,6 +20,8 @@ S_SITE  = "A1B2C3D4-0000-0000-0000-000000000005"
 NOTIFY  = "A1B2C3D4-0000-0000-0000-000000000006"
 KW_DUMP = "A1B2C3D4-0000-0000-0000-000000000007"
 S_DUMP  = "A1B2C3D4-0000-0000-0000-000000000008"
+SF_OTP  = "A1B2C3D4-0000-0000-0000-000000000009"
+S_OTP   = "A1B2C3D4-0000-0000-0000-00000000000A"
 
 CMD, OPT, CTRL = 1048576, 524288, 262144
 
@@ -35,6 +37,21 @@ def keyword(uid, kw, title, subtext, argumenttype=0):
         "config": {"argumenttype": argumenttype, "keyword": kw,
                    "subtext": subtext, "text": title, "withspace": True},
         "type": "alfred.workflow.input.keyword", "uid": uid, "version": 1,
+    }
+
+
+def scriptfilter(uid, kw, title, subtext, script):
+    return {
+        "config": {
+            "alfredfiltersresults": True, "alfredfiltersresultsmatchmode": 0,
+            "argumenttrimmode": 0, "argumenttype": 1, "escaping": 102,
+            "keyword": kw, "queuedelaycustom": 3,
+            "queuedelayimmediatelyinitially": True, "queuedelaymode": 0,
+            "queuemode": 1, "runningsubtext": "", "script": script,
+            "scriptargtype": 0, "scriptfile": "", "subtext": subtext,
+            "title": title, "type": 0, "withspace": True,
+        },
+        "type": "alfred.workflow.input.scriptfilter", "uid": uid, "version": 3,
     }
 
 
@@ -65,6 +82,12 @@ objects = [
             "Diagnostics: saves a redacted accessibility tree to your Desktop",
             argumenttype=1),
     runscript(S_DUMP, '/usr/bin/osascript pw-dump.applescript "$1"'),
+    # Verification codes are generated locally from stored seeds rather than
+    # read out of the Passwords app, which cannot be driven. See the README.
+    scriptfilter(SF_OTP, "{var:otpkeyword}", "Verification codes",
+                 "Copy a time-based code for a stored account",
+                 "/usr/bin/python3 totp.py --alfred"),
+    runscript(S_OTP, './copy-otp.sh "$1"'),
 ]
 
 connections = {
@@ -75,6 +98,7 @@ connections = {
     S_PASS: [conn(NOTIFY)], S_USER: [conn(NOTIFY)],
     S_CODE: [conn(NOTIFY)], S_SITE: [conn(NOTIFY)],
     KW_DUMP: [conn(S_DUMP)], S_DUMP: [conn(NOTIFY)],
+    SF_OTP: [conn(S_OTP)], S_OTP: [conn(NOTIFY)],
 }
 
 uidata = {
@@ -82,6 +106,7 @@ uidata = {
     S_USER: {"xpos": 300, "ypos": 120}, S_CODE: {"xpos": 300, "ypos": 220},
     S_SITE: {"xpos": 300, "ypos": 320}, NOTIFY: {"xpos": 560, "ypos": 170},
     KW_DUMP: {"xpos": 40, "ypos": 440}, S_DUMP: {"xpos": 300, "ypos": 440},
+    SF_OTP: {"xpos": 40, "ypos": 560}, S_OTP: {"xpos": 300, "ypos": 560},
 }
 
 # Gallery requires configuration to be exposed as Workflow Configuration.
@@ -91,6 +116,12 @@ userconfig = [
                    "required": True, "trim": True},
         "description": "The keyword used to search your passwords.",
         "label": "Keyword", "type": "textfield", "variable": "keyword",
+    },
+    {
+        "config": {"default": "otp", "placeholder": "otp",
+                   "required": True, "trim": True},
+        "description": "The keyword used to copy a verification code.",
+        "label": "Codes keyword", "type": "textfield", "variable": "otpkeyword",
     },
     {
         "config": {"default": "45", "placeholder": "45",
@@ -104,29 +135,37 @@ userconfig = [
 
 readme = """## Setup
 
-Grant Alfred Accessibility permission in System Settings \u2192 Privacy & Security \
-\u2192 Accessibility. Apple provides no API for the Passwords app, so this workflow \
-controls it through the Accessibility API.
+Store a verification code seed, once per account:
+
+```
+python3 totp.py --store "you@example.com"     # paste the secret, then Ctrl-D
+```
+
+Seeds are kept in your login keychain, never in this workflow.
 
 Requires macOS Sequoia or later.
 
 ## Usage
 
-Search your Apple Passwords entries and copy a field to the clipboard via the \
-`pass` keyword.
+Copy a time-based verification code for a stored account via the `otp` keyword.
 
-* <kbd>\u21a9</kbd> Copy the password.
-* <kbd>\u2318</kbd><kbd>\u21a9</kbd> Copy the username.
-* <kbd>\u2325</kbd><kbd>\u21a9</kbd> Copy the verification code.
-* <kbd>\u2303</kbd><kbd>\u21a9</kbd> Copy the website.
+* <kbd>\u21a9</kbd> Copy the current code.
 
 The clipboard is cleared after the delay set in the Workflow\u2019s Configuration, \
 but only if it still holds the copied value.
 
-Alternatively, save the Passwords app\u2019s accessibility tree to your Desktop via \
-the `pwdump` keyword. Use it if a field cannot be found. The dump is redacted \
-\u2014 your entries are replaced with character counts \u2014 so it is safe to \
-attach to a bug report.
+Codes are generated locally from the stored seed (RFC 6238), so this works \
+offline and does not open the Passwords app.
+
+## The `pass` keyword does not work
+
+Copying directly out of the Apple Passwords app is not currently possible. \
+The app exposes no scripting interface and no Shortcuts actions, its row \
+context menu is absent from the accessibility tree, and it does not accept \
+programmatic selection \u2014 so the Copy commands never become enabled. The \
+`pass` and `pwdump` keywords are left in place for anyone who wants to \
+investigate further; `pwdump` saves a redacted accessibility tree to your \
+Desktop.
 """
 
 wf = {
@@ -143,7 +182,8 @@ wf = {
     "readme": readme,
     "uidata": uidata,
     "userconfigurationconfig": userconfig,
-    "variables": {"keyword": "pass", "CLEAR_CLIPBOARD_AFTER": "45"},
+    "variables": {"keyword": "pass", "otpkeyword": "otp",
+                  "CLEAR_CLIPBOARD_AFTER": "45"},
     "variablesdontexport": [],
     "version": VERSION,
     "webaddress": f"https://github.com/{GH_USER}/{REPO}",
@@ -168,6 +208,8 @@ declared = {c["variable"] for c in back["userconfigurationconfig"]}
 assert "keyword" in declared and back["objects"][0]["config"]["keyword"] == "{var:keyword}"
 assert len(back["variables"]["keyword"]) >= 3, "default keyword must be >= 3 chars"
 assert len(back["objects"][6]["config"]["keyword"]) >= 3, "pwdump keyword too short"
+assert "otpkeyword" in declared, "otp keyword must be user-configurable"
+assert len(back["variables"]["otpkeyword"]) >= 3, "otp keyword must be >= 3 chars"
 print("info.plist OK -", len(back["objects"]), "objects,",
       sum(len(v) for v in back["connections"].values()), "connections,",
       len(back["userconfigurationconfig"]), "config items")

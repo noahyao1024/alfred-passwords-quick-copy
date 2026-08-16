@@ -3,7 +3,6 @@
 
     totp.py <account>             print the current code
     totp.py --store <account>     read a secret or otpauth:// URI from stdin
-    totp.py --import <csv>        pull otpauth:// URIs out of a Passwords export
     totp.py --list                list stored accounts
     totp.py --remove <account>    forget an account
     totp.py --selftest            check against the RFC 6238 test vectors
@@ -18,7 +17,6 @@ names only, never secrets.
 """
 
 import base64
-import csv
 import hashlib
 import hmac
 import json
@@ -162,59 +160,10 @@ def remove(account):
 # --------------------------------------------------------------------------
 # commands
 
-def cmd_import(path):
-    """Extract otpauth:// URIs from a Passwords app CSV export.
-
-    Secrets are never printed. Only the account names are reported back.
-    """
-    if not os.path.exists(path):
-        sys.exit(f"No such file: {path}")
-
-    found = []
-    with open(path, newline="", encoding="utf-8-sig") as f:
-        for row in csv.DictReader(f):
-            uri = next(
-                (v for v in row.values()
-                 if v and v.strip().lower().startswith("otpauth://")),
-                None,
-            )
-            if not uri:
-                continue
-            try:
-                parsed = parse_uri(uri.strip())
-            except ValueError as exc:
-                print(f"  skipped a row: {exc}", file=sys.stderr)
-                continue
-            # Prefer the entry's own username, fall back to the URI label.
-            account = ""
-            for key in ("Username", "username", "Title", "title"):
-                if row.get(key):
-                    account = row[key].strip()
-                    break
-            account = account or parsed["label"] or "unnamed"
-            store(account, uri.strip())
-            found.append((account, parsed))
-
-    if not found:
-        print("No otpauth:// entries in that export.")
-        print("An entry only has one if a verification code is set up for it.")
-        return
-
-    print(f"Stored {len(found)} account(s):")
-    for account, p in found:
-        extra = ""
-        if (p["digits"], p["period"], p["algorithm"]) != (6, 30, "SHA1"):
-            extra = f"  [{p['digits']} digits, {p['period']}s, {p['algorithm']}]"
-        print(f"  {account}{extra}")
-    print()
-    print(f"That CSV still holds your passwords in cleartext. Remove it with:")
-    print(f"  rm -P {path!r}")
-
-
 def cmd_list():
     names = index_load()
     if not names:
-        print("No accounts stored yet. Add one with --store or --import.")
+        print("No accounts stored yet. Add one with --store.")
     for n in names:
         print(n)
 
@@ -290,10 +239,6 @@ def main():
         return cmd_list()
     if cmd == "--alfred":
         return cmd_alfred()
-    if cmd == "--import":
-        if len(args) < 2:
-            sys.exit("Usage: totp.py --import <csv>")
-        return cmd_import(args[1])
     if cmd == "--remove":
         if len(args) < 2:
             sys.exit("Usage: totp.py --remove <account>")

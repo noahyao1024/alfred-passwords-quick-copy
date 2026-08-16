@@ -20,8 +20,6 @@ Requires macOS Sequoia or later. No Accessibility permission is needed.
 
 Copy a time-based verification code for a stored account via the `otp` keyword.
 
-![Copying a verification code](images/otp.png)
-
 * <kbd>↩</kbd> Copy the current code.
 
 The clipboard is cleared after the delay set in the Workflow's Configuration,

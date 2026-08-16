@@ -14,7 +14,7 @@ Copies a time-based verification code to your clipboard. Codes are generated
 locally from a seed held in your login keychain, so it works offline, opens
 nothing, and needs no Accessibility permission.
 
-**Download:** https://github.com/noahyao1024/alfred-passwords-quick-copy/releases/latest
+**Download:** https://github.com/noahyao1024/alfred-verification-codes/releases/latest
 
 ## Setup
 

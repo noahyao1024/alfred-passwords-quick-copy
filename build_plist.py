@@ -6,7 +6,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # unique and is conventionally reverse-domain based on the author.
 GH_USER = os.environ.get("GH_USER", "YOUR-GITHUB-USERNAME")
 AUTHOR = os.environ.get("AUTHOR", "Your Name")
-REPO = os.environ.get("REPO", "alfred-passwords-quick-copy")
+REPO = os.environ.get("REPO", "alfred-verification-codes")
 # Must track the release tag: Alfred shows this and uses it for update checks,
 # so a bundle claiming one version inside a differently tagged release is a
 # real mismatch.

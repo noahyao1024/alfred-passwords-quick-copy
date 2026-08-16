@@ -6,7 +6,7 @@ cd "$(dirname "$0")"
 
 : "${GH_USER:?Set GH_USER to your GitHub username}"
 : "${AUTHOR:?Set AUTHOR to your name}"
-REPO="${REPO:-alfred-passwords-quick-copy}"
+REPO="${REPO:-alfred-verification-codes}"
 VERSION="${VERSION:-0.3.0}"
 NAME="Verification Codes"
 DESCRIPTION="Alfred workflow to copy time-based verification codes, generated locally from seeds in your login keychain"

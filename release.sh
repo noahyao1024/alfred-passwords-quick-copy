@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 : "${AUTHOR:?Set AUTHOR to your name}"
 REPO="${REPO:-alfred-passwords-quick-copy}"
 VERSION="${VERSION:-0.3.0}"
-NAME="Passwords Quick Copy"
+NAME="Verification Codes"
 DESCRIPTION="Alfred workflow to copy time-based verification codes, generated locally from seeds in your login keychain"
 
 echo "Building $VERSION with GH_USER=$GH_USER AUTHOR=$AUTHOR"

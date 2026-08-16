@@ -1,8 +1,8 @@
 #!/bin/bash
-# Builds dist/Passwords Quick Copy.alfredworkflow from src/
+# Builds dist/Verification Codes.alfredworkflow from src/
 set -e
 cd "$(dirname "$0")"
-NAME="Passwords Quick Copy"
+NAME="Verification Codes"
 
 # Verify the TOTP implementation against the RFC 6238 test vectors. A code
 # generator that is subtly wrong produces plausible-looking numbers that never

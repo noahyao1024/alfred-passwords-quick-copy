@@ -42,7 +42,7 @@
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
-	<string>Passwords Quick Copy</string>
+	<string>Verification Codes</string>
 	<key>objects</key>
 	<array>
 		<dict>

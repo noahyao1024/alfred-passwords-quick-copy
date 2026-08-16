@@ -1,4 +1,4 @@
-# Passwords Quick Copy
+# Verification Codes
 
 An [Alfred](https://www.alfredapp.com) workflow that copies time-based
 verification codes to the clipboard, generated locally from seeds held in your

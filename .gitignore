@@ -2,8 +2,10 @@
 __pycache__/
 *.pyc
 
-# The originals this repo was unpacked from. release.sh runs `git add -A`,
-# which would otherwise commit a tarball of the repo into the repo, and a
-# stale top-level workflow that users could download instead of dist/.
+# The originals this repo was unpacked from, still sitting in the working
+# directory. release.sh runs `git add -A`, which would otherwise commit a
+# tarball of the repo into the repo, and a stale top-level workflow that
+# users could download instead of the one in dist/. The name below is the
+# old one on purpose: it is what those leftover files are called.
 /alfred-passwords-quick-copy-repo.tar.gz
 /Passwords Quick Copy.alfredworkflow

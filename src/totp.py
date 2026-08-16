@@ -27,6 +27,10 @@ import sys
 import time
 import urllib.parse
 
+# These two name where your seeds are stored, so they are deliberately frozen
+# even though the workflow has since been renamed. Changing either would hide
+# every seed already in the keychain, which is a data loss dressed up as a
+# cosmetic tidy-up. They are internal identifiers; nothing shows them to users.
 SERVICE = "alfred-passwords-quick-copy-totp"
 INDEX = os.path.expanduser(
     "~/Library/Application Support/alfred-passwords-quick-copy/accounts.json"

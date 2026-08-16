@@ -127,7 +127,11 @@ wf = {
     "description": "Copy a time-based verification code to the clipboard, "
                    "generated locally from a seed in your login keychain.",
     "disabled": False,
-    "name": "Passwords Quick Copy",
+    # The name Alfred shows. The bundle ID below deliberately still says
+    # passwordsquickcopy: it is invisible to users, and changing it would make
+    # Alfred treat this as a brand new workflow, leaving the old one installed
+    # alongside it with its own configuration.
+    "name": "Verification Codes",
     "objects": objects,
     "readme": readme,
     "uidata": uidata,

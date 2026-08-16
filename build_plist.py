@@ -56,9 +56,12 @@ def scriptfilter(uid, kw, title, subtext, script):
 
 
 def runscript(uid, script):
+    # scriptargtype 1 is the one that passes the query as argv, so "$1" below
+    # is populated. With 0 the script runs with no arguments at all, which is
+    # how this shipped originally: every action saw an empty "$1".
     return {
         "config": {"concurrently": False, "escaping": 102, "script": script,
-                   "scriptargtype": 0, "scriptfile": "", "type": 0},
+                   "scriptargtype": 1, "scriptfile": "", "type": 0},
         "type": "alfred.workflow.action.script", "uid": uid, "version": 2,
     }
 

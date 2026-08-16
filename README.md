@@ -6,21 +6,25 @@ login keychain.
 
 ## Setup
 
-Store a seed, once per account:
-
-```sh
-python3 src/totp.py --store "you@example.com"   # paste the secret, then Ctrl-D
-```
-
-Seeds live in the login keychain, never in this workflow or this repository.
+Nothing to set up. Seeds live in your login keychain, never in this workflow or
+this repository.
 
 Requires macOS Sequoia or later. No Accessibility permission is needed.
 
 ## Usage
 
-Copy a time-based verification code for a stored account via the `otp` keyword.
+**Add an account.** Copy its secret or `otpauth://` link, then use the `otpadd`
+keyword. Give it a name, or leave it blank to take the name from the link. Your
+clipboard is cleared once the seed is stored.
+
+The seed is taken from the clipboard rather than typed after the keyword on
+purpose: Alfred keeps a history of what you type into it, and a TOTP seed does
+not belong in a searchable log.
+
+**Copy a code.** Use the `otp` keyword and pick the account.
 
 * <kbd>↩</kbd> Copy the current code.
+* <kbd>⌥</kbd><kbd>↩</kbd> Forget this account.
 
 The clipboard is cleared after the delay set in the Workflow's Configuration,
 but only if it still holds the copied value — compared by SHA-256, so the code
@@ -32,10 +36,14 @@ app. The implementation is
 document's published test vectors on every build, including non-default digit
 counts, periods and hash algorithms.
 
-## Managing seeds
+## Command line
+
+Everything above is doable from Alfred alone; these exist for scripting and
+debugging, not because you need them.
 
 ```sh
-python3 src/totp.py --store "you@example.com"   # add or replace one
+python3 src/totp.py --store "you@example.com"   # add or replace one (stdin)
+python3 src/totp.py --store                     # name taken from the URI
 python3 src/totp.py --list                      # stored accounts
 python3 src/totp.py --remove "you@example.com"  # forget one
 python3 src/totp.py --selftest                  # RFC 6238 vectors

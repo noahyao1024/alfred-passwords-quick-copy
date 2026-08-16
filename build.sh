@@ -13,7 +13,7 @@ echo "TOTP selftest OK"
 python3 build_plist.py
 mkdir -p dist
 rm -f "dist/$NAME.alfredworkflow"
-chmod +x src/copy-otp.sh src/totp.py
+chmod +x src/copy-otp.sh src/add-otp.sh src/totp.py
 rm -rf src/__pycache__
 ( cd src && zip -q -r "../dist/$NAME.alfredworkflow" . -x '.*' '__pycache__/*' )
 echo "Built dist/$NAME.alfredworkflow"

@@ -93,6 +93,20 @@ def parse_uri(uri):
     }
 
 
+def derive_name(secret):
+    """Best account name for a seed, so Alfred can add one without being told.
+
+    otpauth labels are conventionally "Issuer:account", and the account half is
+    what someone would actually search for.
+    """
+    if not secret.strip().lower().startswith("otpauth://"):
+        return ""
+    label = parse_uri(secret.strip())["label"]
+    if ":" in label:
+        return label.split(":", 1)[1].strip()
+    return label.strip()
+
+
 def code_for(stored, when=None):
     """Stored value is either an otpauth:// URI or a bare base32 secret."""
     if stored.strip().lower().startswith("otpauth://"):
@@ -178,13 +192,13 @@ def cmd_alfred():
     if not names:
         items = [{
             "title": "No verification codes stored",
-            "subtitle": "Add one with: totp.py --store <account>",
+            "subtitle": "Copy a secret or otpauth:// link, then use the otpadd keyword",
             "valid": False,
         }]
     else:
         items = [{
             "title": n,
-            "subtitle": "Copy the current verification code",
+            "subtitle": "↩ copy the current code    ⌥↩ forget this account",
             "arg": n,
             "match": n,
         } for n in names]
@@ -248,13 +262,22 @@ def main():
             sys.exit("Usage: totp.py --remove <account>")
         return remove(args[1])
     if cmd == "--store":
-        if len(args) < 2:
-            sys.exit("Usage: totp.py --store <account>   (secret on stdin)")
+        secret = sys.stdin.read()
+        # The account name is optional: an otpauth:// link already carries one,
+        # which is what lets the Alfred side add a seed with no typing at all.
+        account = args[1] if len(args) > 1 else ""
+        if not account:
+            try:
+                account = derive_name(secret)
+            except ValueError as exc:
+                sys.exit(f"That does not look like a TOTP secret: {exc}")
+            if not account:
+                sys.exit("Give an account name: a bare secret carries none.")
         try:
-            store(args[1], sys.stdin.read())
+            store(account, secret)
         except ValueError as exc:
             sys.exit(f"That does not look like a TOTP secret: {exc}")
-        print(f"Stored secret for {args[1]} in the login keychain.")
+        print(f"Stored {account}")
         return
 
     print(code_for(load(cmd)))

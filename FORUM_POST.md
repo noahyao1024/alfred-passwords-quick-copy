@@ -16,22 +16,16 @@ nothing, and needs no Accessibility permission.
 
 **Download:** https://github.com/noahyao1024/alfred-verification-codes/releases/latest
 
-## Setup
-
-Store a seed, once per account:
-
-```
-python3 src/totp.py --store "you@example.com"
-```
-
-Either a bare base32 secret or a full `otpauth://` URI. A URI is preferable
-where you have one, since it carries the digit count, period and algorithm.
-
-Requires macOS Sequoia or later.
-
 ## Usage
 
-* Type `otp`, pick the account, press <kbd>↩</kbd>.
+* **Add an account:** copy its secret or `otpauth://` link, then type `otpadd`.
+  Name it, or leave it blank to take the name from the link. Your clipboard is
+  cleared once the seed is stored.
+* **Copy a code:** type `otp`, pick the account, press <kbd>↩</kbd>.
+  <kbd>⌥</kbd><kbd>↩</kbd> forgets an account.
+
+No setup, no terminal, no Accessibility permission. Requires macOS Sequoia or
+later.
 
 The clipboard clears after the delay set in the Workflow's Configuration, but
 only if it still holds the copied value — compared by SHA-256, so the code is

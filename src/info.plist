@@ -8,127 +8,6 @@
 	<string>Productivity</string>
 	<key>connections</key>
 	<dict>
-		<key>A1B2C3D4-0000-0000-0000-000000000001</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-0000-0000-0000-000000000002</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string>copy password</string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-0000-0000-0000-000000000003</string>
-				<key>modifiers</key>
-				<integer>1048576</integer>
-				<key>modifiersubtext</key>
-				<string>copy username</string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-0000-0000-0000-000000000004</string>
-				<key>modifiers</key>
-				<integer>524288</integer>
-				<key>modifiersubtext</key>
-				<string>copy verification code</string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-0000-0000-0000-000000000005</string>
-				<key>modifiers</key>
-				<integer>262144</integer>
-				<key>modifiersubtext</key>
-				<string>copy website</string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>A1B2C3D4-0000-0000-0000-000000000002</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-0000-0000-0000-000000000006</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>A1B2C3D4-0000-0000-0000-000000000003</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-0000-0000-0000-000000000006</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>A1B2C3D4-0000-0000-0000-000000000004</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-0000-0000-0000-000000000006</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>A1B2C3D4-0000-0000-0000-000000000005</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-0000-0000-0000-000000000006</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>A1B2C3D4-0000-0000-0000-000000000007</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-0000-0000-0000-000000000008</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>A1B2C3D4-0000-0000-0000-000000000008</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>A1B2C3D4-0000-0000-0000-000000000006</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
 		<key>A1B2C3D4-0000-0000-0000-000000000009</key>
 		<array>
 			<dict>
@@ -159,191 +38,13 @@
 	<key>createdby</key>
 	<string>Noah Yao</string>
 	<key>description</key>
-	<string>Search the Apple Passwords app and copy a password, username, verification code or website to the clipboard.</string>
+	<string>Copy a time-based verification code to the clipboard, generated locally from a seed in your login keychain.</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
 	<string>Passwords Quick Copy</string>
 	<key>objects</key>
 	<array>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>argumenttype</key>
-				<integer>0</integer>
-				<key>keyword</key>
-				<string>{var:keyword}</string>
-				<key>subtext</key>
-				<string>↩ password   ⌘ username   ⌥ verification code   ⌃ website</string>
-				<key>text</key>
-				<string>Copy from Passwords</string>
-				<key>withspace</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.keyword</string>
-			<key>uid</key>
-			<string>A1B2C3D4-0000-0000-0000-000000000001</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>./copy.sh password "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>A1B2C3D4-0000-0000-0000-000000000002</string>
-			<key>version</key>
-			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>./copy.sh username "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>A1B2C3D4-0000-0000-0000-000000000003</string>
-			<key>version</key>
-			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>./copy.sh code "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>A1B2C3D4-0000-0000-0000-000000000004</string>
-			<key>version</key>
-			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>./copy.sh website "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>A1B2C3D4-0000-0000-0000-000000000005</string>
-			<key>version</key>
-			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>lastpathcomponent</key>
-				<false/>
-				<key>onlyshowifquerypopulated</key>
-				<true/>
-				<key>removeextension</key>
-				<false/>
-				<key>text</key>
-				<string>{query}</string>
-				<key>title</key>
-				<string>Passwords</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.output.notification</string>
-			<key>uid</key>
-			<string>A1B2C3D4-0000-0000-0000-000000000006</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>argumenttype</key>
-				<integer>1</integer>
-				<key>keyword</key>
-				<string>pwdump</string>
-				<key>subtext</key>
-				<string>Diagnostics: saves a redacted accessibility tree to your Desktop</string>
-				<key>text</key>
-				<string>Dump Passwords UI tree</string>
-				<key>withspace</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.keyword</string>
-			<key>uid</key>
-			<string>A1B2C3D4-0000-0000-0000-000000000007</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>/usr/bin/osascript pw-dump.applescript "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>A1B2C3D4-0000-0000-0000-000000000008</string>
-			<key>version</key>
-			<integer>2</integer>
-		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -414,11 +115,32 @@
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>lastpathcomponent</key>
+				<false/>
+				<key>onlyshowifquerypopulated</key>
+				<true/>
+				<key>removeextension</key>
+				<false/>
+				<key>text</key>
+				<string>{query}</string>
+				<key>title</key>
+				<string>Verification code</string>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.notification</string>
+			<key>uid</key>
+			<string>A1B2C3D4-0000-0000-0000-000000000006</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
 	</array>
 	<key>readme</key>
 	<string>## Setup
 
-Store a verification code seed, once per account:
+Store a seed, once per account:
 
 ```
 python3 totp.py --store "you@example.com"     # paste the secret, then Ctrl-D
@@ -426,7 +148,7 @@ python3 totp.py --store "you@example.com"     # paste the secret, then Ctrl-D
 
 Seeds are kept in your login keychain, never in this workflow.
 
-Requires macOS Sequoia or later.
+Requires macOS Sequoia or later. No Accessibility permission is needed.
 
 ## Usage
 
@@ -436,108 +158,34 @@ Copy a time-based verification code for a stored account via the `otp` keyword.
 
 The clipboard is cleared after the delay set in the Workflow’s Configuration, but only if it still holds the copied value.
 
-Codes are generated locally from the stored seed (RFC 6238), so this works offline and does not open the Passwords app.
-
-## The `pass` keyword does not work
-
-Copying directly out of the Apple Passwords app is not currently possible. The app exposes no scripting interface and no Shortcuts actions, its row context menu is absent from the accessibility tree, and it does not accept programmatic selection — so the Copy commands never become enabled. The `pass` and `pwdump` keywords are left in place for anyone who wants to investigate further; `pwdump` saves a redacted accessibility tree to your Desktop.
+Codes are generated locally from the stored seed (RFC 6238), so this works offline and never opens the Passwords app.
 </string>
 	<key>uidata</key>
 	<dict>
-		<key>A1B2C3D4-0000-0000-0000-000000000001</key>
-		<dict>
-			<key>xpos</key>
-			<integer>40</integer>
-			<key>ypos</key>
-			<integer>40</integer>
-		</dict>
-		<key>A1B2C3D4-0000-0000-0000-000000000002</key>
-		<dict>
-			<key>xpos</key>
-			<integer>300</integer>
-			<key>ypos</key>
-			<integer>20</integer>
-		</dict>
-		<key>A1B2C3D4-0000-0000-0000-000000000003</key>
-		<dict>
-			<key>xpos</key>
-			<integer>300</integer>
-			<key>ypos</key>
-			<integer>120</integer>
-		</dict>
-		<key>A1B2C3D4-0000-0000-0000-000000000004</key>
-		<dict>
-			<key>xpos</key>
-			<integer>300</integer>
-			<key>ypos</key>
-			<integer>220</integer>
-		</dict>
-		<key>A1B2C3D4-0000-0000-0000-000000000005</key>
-		<dict>
-			<key>xpos</key>
-			<integer>300</integer>
-			<key>ypos</key>
-			<integer>320</integer>
-		</dict>
 		<key>A1B2C3D4-0000-0000-0000-000000000006</key>
 		<dict>
 			<key>xpos</key>
 			<integer>560</integer>
 			<key>ypos</key>
-			<integer>170</integer>
-		</dict>
-		<key>A1B2C3D4-0000-0000-0000-000000000007</key>
-		<dict>
-			<key>xpos</key>
 			<integer>40</integer>
-			<key>ypos</key>
-			<integer>440</integer>
-		</dict>
-		<key>A1B2C3D4-0000-0000-0000-000000000008</key>
-		<dict>
-			<key>xpos</key>
-			<integer>300</integer>
-			<key>ypos</key>
-			<integer>440</integer>
 		</dict>
 		<key>A1B2C3D4-0000-0000-0000-000000000009</key>
 		<dict>
 			<key>xpos</key>
 			<integer>40</integer>
 			<key>ypos</key>
-			<integer>560</integer>
+			<integer>40</integer>
 		</dict>
 		<key>A1B2C3D4-0000-0000-0000-00000000000A</key>
 		<dict>
 			<key>xpos</key>
 			<integer>300</integer>
 			<key>ypos</key>
-			<integer>560</integer>
+			<integer>40</integer>
 		</dict>
 	</dict>
 	<key>userconfigurationconfig</key>
 	<array>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>default</key>
-				<string>pass</string>
-				<key>placeholder</key>
-				<string>pass</string>
-				<key>required</key>
-				<true/>
-				<key>trim</key>
-				<true/>
-			</dict>
-			<key>description</key>
-			<string>The keyword used to search your passwords.</string>
-			<key>label</key>
-			<string>Keyword</string>
-			<key>type</key>
-			<string>textfield</string>
-			<key>variable</key>
-			<string>keyword</string>
-		</dict>
 		<dict>
 			<key>config</key>
 			<dict>
@@ -553,7 +201,7 @@ Copying directly out of the Apple Passwords app is not currently possible. The a
 			<key>description</key>
 			<string>The keyword used to copy a verification code.</string>
 			<key>label</key>
-			<string>Codes keyword</string>
+			<string>Keyword</string>
 			<key>type</key>
 			<string>textfield</string>
 			<key>variable</key>
@@ -585,15 +233,13 @@ Copying directly out of the Apple Passwords app is not currently possible. The a
 	<dict>
 		<key>CLEAR_CLIPBOARD_AFTER</key>
 		<string>45</string>
-		<key>keyword</key>
-		<string>pass</string>
 		<key>otpkeyword</key>
 		<string>otp</string>
 	</dict>
 	<key>variablesdontexport</key>
 	<array/>
 	<key>version</key>
-	<string>0.2.1</string>
+	<string>0.3.0</string>
 	<key>webaddress</key>
 	<string>https://github.com/noahyao1024/alfred-passwords-quick-copy</string>
 </dict>

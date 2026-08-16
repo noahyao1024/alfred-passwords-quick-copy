@@ -1,4 +1,4 @@
-import plistlib, os, sys
+import plistlib, os
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -8,36 +8,19 @@ GH_USER = os.environ.get("GH_USER", "YOUR-GITHUB-USERNAME")
 AUTHOR = os.environ.get("AUTHOR", "Your Name")
 REPO = os.environ.get("REPO", "alfred-passwords-quick-copy")
 # Must track the release tag: Alfred shows this and uses it for update checks,
-# so a bundle claiming 1.0.0 inside a v0.1.0 release is a real mismatch.
-VERSION = os.environ.get("VERSION", "0.1.0")
+# so a bundle claiming one version inside a differently tagged release is a
+# real mismatch.
+VERSION = os.environ.get("VERSION", "0.3.0")
 SRC = os.path.join(HERE, "src")
 
-KW      = "A1B2C3D4-0000-0000-0000-000000000001"
-S_PASS  = "A1B2C3D4-0000-0000-0000-000000000002"
-S_USER  = "A1B2C3D4-0000-0000-0000-000000000003"
-S_CODE  = "A1B2C3D4-0000-0000-0000-000000000004"
-S_SITE  = "A1B2C3D4-0000-0000-0000-000000000005"
-NOTIFY  = "A1B2C3D4-0000-0000-0000-000000000006"
-KW_DUMP = "A1B2C3D4-0000-0000-0000-000000000007"
-S_DUMP  = "A1B2C3D4-0000-0000-0000-000000000008"
-SF_OTP  = "A1B2C3D4-0000-0000-0000-000000000009"
-S_OTP   = "A1B2C3D4-0000-0000-0000-00000000000A"
-
-CMD, OPT, CTRL = 1048576, 524288, 262144
+NOTIFY = "A1B2C3D4-0000-0000-0000-000000000006"
+SF_OTP = "A1B2C3D4-0000-0000-0000-000000000009"
+S_OTP = "A1B2C3D4-0000-0000-0000-00000000000A"
 
 
 def conn(dest, modifiers=0, subtext=""):
     return {"destinationuid": dest, "modifiers": modifiers,
             "modifiersubtext": subtext, "vitoclose": False}
-
-
-def keyword(uid, kw, title, subtext, argumenttype=0):
-    # argumenttype: 0 = required, 1 = optional, 2 = none.
-    return {
-        "config": {"argumenttype": argumenttype, "keyword": kw,
-                   "subtext": subtext, "text": title, "withspace": True},
-        "type": "alfred.workflow.input.keyword", "uid": uid, "version": 1,
-    }
 
 
 def scriptfilter(uid, kw, title, subtext, script):
@@ -68,63 +51,37 @@ def runscript(uid, script):
 
 objects = [
     # Keyword is driven by a configurable variable, per the Gallery style guide.
-    keyword(KW, "{var:keyword}", "Copy from Passwords",
-            "\u21a9 password   \u2318 username   \u2325 verification code   \u2303 website"),
-    runscript(S_PASS, './copy.sh password "$1"'),
-    runscript(S_USER, './copy.sh username "$1"'),
-    runscript(S_CODE, './copy.sh code "$1"'),
-    runscript(S_SITE, './copy.sh website "$1"'),
-    {
-        "config": {"lastpathcomponent": False, "onlyshowifquerypopulated": True,
-                   "removeextension": False, "text": "{query}", "title": "Passwords"},
-        "type": "alfred.workflow.output.notification", "uid": NOTIFY, "version": 1,
-    },
-    # The query is optional here: `pwdump` on its own dumps the unfiltered
-    # window, which is the common case when nothing resolves at all.
-    keyword(KW_DUMP, "pwdump", "Dump Passwords UI tree",
-            "Diagnostics: saves a redacted accessibility tree to your Desktop",
-            argumenttype=1),
-    runscript(S_DUMP, '/usr/bin/osascript pw-dump.applescript "$1"'),
-    # Verification codes are generated locally from stored seeds rather than
-    # read out of the Passwords app, which cannot be driven. See the README.
     scriptfilter(SF_OTP, "{var:otpkeyword}", "Verification codes",
                  "Copy a time-based code for a stored account",
                  "/usr/bin/python3 totp.py --alfred"),
     runscript(S_OTP, './copy-otp.sh "$1"'),
+    {
+        "config": {"lastpathcomponent": False, "onlyshowifquerypopulated": True,
+                   "removeextension": False, "text": "{query}",
+                   "title": "Verification code"},
+        "type": "alfred.workflow.output.notification", "uid": NOTIFY,
+        "version": 1,
+    },
 ]
 
 connections = {
-    KW: [conn(S_PASS, 0, "copy password"),
-         conn(S_USER, CMD, "copy username"),
-         conn(S_CODE, OPT, "copy verification code"),
-         conn(S_SITE, CTRL, "copy website")],
-    S_PASS: [conn(NOTIFY)], S_USER: [conn(NOTIFY)],
-    S_CODE: [conn(NOTIFY)], S_SITE: [conn(NOTIFY)],
-    KW_DUMP: [conn(S_DUMP)], S_DUMP: [conn(NOTIFY)],
-    SF_OTP: [conn(S_OTP)], S_OTP: [conn(NOTIFY)],
+    SF_OTP: [conn(S_OTP)],
+    S_OTP: [conn(NOTIFY)],
 }
 
 uidata = {
-    KW: {"xpos": 40, "ypos": 40}, S_PASS: {"xpos": 300, "ypos": 20},
-    S_USER: {"xpos": 300, "ypos": 120}, S_CODE: {"xpos": 300, "ypos": 220},
-    S_SITE: {"xpos": 300, "ypos": 320}, NOTIFY: {"xpos": 560, "ypos": 170},
-    KW_DUMP: {"xpos": 40, "ypos": 440}, S_DUMP: {"xpos": 300, "ypos": 440},
-    SF_OTP: {"xpos": 40, "ypos": 560}, S_OTP: {"xpos": 300, "ypos": 560},
+    SF_OTP: {"xpos": 40, "ypos": 40},
+    S_OTP: {"xpos": 300, "ypos": 40},
+    NOTIFY: {"xpos": 560, "ypos": 40},
 }
 
 # Gallery requires configuration to be exposed as Workflow Configuration.
 userconfig = [
     {
-        "config": {"default": "pass", "placeholder": "pass",
-                   "required": True, "trim": True},
-        "description": "The keyword used to search your passwords.",
-        "label": "Keyword", "type": "textfield", "variable": "keyword",
-    },
-    {
         "config": {"default": "otp", "placeholder": "otp",
                    "required": True, "trim": True},
         "description": "The keyword used to copy a verification code.",
-        "label": "Codes keyword", "type": "textfield", "variable": "otpkeyword",
+        "label": "Keyword", "type": "textfield", "variable": "otpkeyword",
     },
     {
         "config": {"default": "45", "placeholder": "45",
@@ -138,7 +95,7 @@ userconfig = [
 
 readme = """## Setup
 
-Store a verification code seed, once per account:
+Store a seed, once per account:
 
 ```
 python3 totp.py --store "you@example.com"     # paste the secret, then Ctrl-D
@@ -146,29 +103,19 @@ python3 totp.py --store "you@example.com"     # paste the secret, then Ctrl-D
 
 Seeds are kept in your login keychain, never in this workflow.
 
-Requires macOS Sequoia or later.
+Requires macOS Sequoia or later. No Accessibility permission is needed.
 
 ## Usage
 
 Copy a time-based verification code for a stored account via the `otp` keyword.
 
-* <kbd>\u21a9</kbd> Copy the current code.
+* <kbd>↩</kbd> Copy the current code.
 
-The clipboard is cleared after the delay set in the Workflow\u2019s Configuration, \
+The clipboard is cleared after the delay set in the Workflow’s Configuration, \
 but only if it still holds the copied value.
 
 Codes are generated locally from the stored seed (RFC 6238), so this works \
-offline and does not open the Passwords app.
-
-## The `pass` keyword does not work
-
-Copying directly out of the Apple Passwords app is not currently possible. \
-The app exposes no scripting interface and no Shortcuts actions, its row \
-context menu is absent from the accessibility tree, and it does not accept \
-programmatic selection \u2014 so the Copy commands never become enabled. The \
-`pass` and `pwdump` keywords are left in place for anyone who wants to \
-investigate further; `pwdump` saves a redacted accessibility tree to your \
-Desktop.
+offline and never opens the Passwords app.
 """
 
 wf = {
@@ -177,16 +124,15 @@ wf = {
     "category": "Productivity",
     "connections": connections,
     "createdby": AUTHOR,
-    "description": "Search the Apple Passwords app and copy a password, "
-                   "username, verification code or website to the clipboard.",
+    "description": "Copy a time-based verification code to the clipboard, "
+                   "generated locally from a seed in your login keychain.",
     "disabled": False,
     "name": "Passwords Quick Copy",
     "objects": objects,
     "readme": readme,
     "uidata": uidata,
     "userconfigurationconfig": userconfig,
-    "variables": {"keyword": "pass", "otpkeyword": "otp",
-                  "CLEAR_CLIPBOARD_AFTER": "45"},
+    "variables": {"otpkeyword": "otp", "CLEAR_CLIPBOARD_AFTER": "45"},
     "variablesdontexport": [],
     "version": VERSION,
     "webaddress": f"https://github.com/{GH_USER}/{REPO}",
@@ -208,11 +154,9 @@ assert set(back["uidata"]) == uids, "uidata does not match objects"
 
 # Gallery checks we can enforce ourselves.
 declared = {c["variable"] for c in back["userconfigurationconfig"]}
-assert "keyword" in declared and back["objects"][0]["config"]["keyword"] == "{var:keyword}"
-assert len(back["variables"]["keyword"]) >= 3, "default keyword must be >= 3 chars"
-assert len(back["objects"][6]["config"]["keyword"]) >= 3, "pwdump keyword too short"
-assert "otpkeyword" in declared, "otp keyword must be user-configurable"
-assert len(back["variables"]["otpkeyword"]) >= 3, "otp keyword must be >= 3 chars"
+assert "otpkeyword" in declared, "keyword must be user-configurable"
+assert back["objects"][0]["config"]["keyword"] == "{var:otpkeyword}"
+assert len(back["variables"]["otpkeyword"]) >= 3, "keyword must be >= 3 chars"
 print("info.plist OK -", len(back["objects"]), "objects,",
       sum(len(v) for v in back["connections"].values()), "connections,",
       len(back["userconfigurationconfig"]), "config items")
